@@ -1,0 +1,123 @@
+# Deployment Pod 2 : Backend (Node.js) + MongoDB dans le MEME Pod
+# Les deux conteneurs partagent localhost ; le backend joint Mongo sur 127.0.0.1:27017
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-db
+  namespace: ecommerce
+  labels:
+    app: backend-db
+    tier: backend
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate            # Necessaire car PVC ReadWriteOnce
+  selector:
+    matchLabels:
+      app: backend-db
+  template:
+    metadata:
+      labels:
+        app: backend-db
+        tier: backend
+    spec:
+      # Epinglage sur le worker "tier=storage" : garantit que le Pod retrouve
+      # toujours le meme hostPath (persistance fiable sur cluster multi-noeuds).
+      nodeSelector:
+        tier: storage
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc
+
+      containers:
+        # ---------- Conteneur 1 : MongoDB ----------
+        - name: mongo
+          image: mongo:7.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 27017
+              name: mongo
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: MONGO_USER
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: MONGO_PASSWORD
+            - name: MONGO_INITDB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: MONGO_DB
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+        # ---------- Conteneur 2 : Backend Node.js ----------
+        - name: backend
+          image: ecommerce-backend:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: MONGO_USER
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: MONGO_PASSWORD
+            - name: MONGO_DB
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: MONGO_DB
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5

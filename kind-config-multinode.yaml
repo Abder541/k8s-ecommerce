@@ -1,0 +1,32 @@
+# Cluster kind multi-noeuds : 1 control-plane + 2 workers
+# - extraPortMappings : expose le NodePort 30080 du frontend sur localhost:30080
+# - le worker "tier=storage" heberge le hostPath du PV MongoDB (Pod 2 y est epingle)
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: ecommerce
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 30080      # NodePort du frontend-service
+        hostPort: 30080
+        protocol: TCP
+      - containerPort: 30090      # NodePort Prometheus (bonus observabilite)
+        hostPort: 30090
+        protocol: TCP
+      - containerPort: 30030      # NodePort Grafana (bonus observabilite)
+        hostPort: 30030
+        protocol: TCP
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "tier=storage"
+  - role: worker

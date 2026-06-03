@@ -1,0 +1,37 @@
+# PersistentVolume + PersistentVolumeClaim pour la persistance MongoDB
+# hostPath fonctionne sur un cluster mono-noeud (Docker Desktop, Minikube, Kind).
+# Sur un cluster multi-noeud, remplacer par un StorageClass (CSI, NFS, etc.).
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+  labels:
+    type: local
+    app: ecommerce
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/mongo"
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: ecommerce
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  selector:
+    matchLabels:
+      app: ecommerce

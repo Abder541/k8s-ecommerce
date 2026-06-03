@@ -1,0 +1,89 @@
+# Provisioning Grafana : datasource Prometheus + provider de dashboards
+# (bonus observabilite - Pod 3)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: ecommerce
+data:
+  # Datasource : Prometheus tourne dans le MEME Pod -> localhost:9090
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://localhost:9090
+        isDefault: true
+        editable: true
+
+  # Provider : charge automatiquement les dashboards depuis /var/lib/grafana/dashboards
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'ecommerce'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: ecommerce
+data:
+  ecommerce-dashboard.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Commandes totales",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+          "targets": [ { "expr": "ecommerce_orders_total", "refId": "A" } ]
+        },
+        {
+          "type": "stat",
+          "title": "Produits au catalogue",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+          "targets": [ { "expr": "ecommerce_products_count", "refId": "A" } ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Taux de requetes HTTP (req/s)",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [ { "expr": "sum(rate(ecommerce_http_requests_total[1m])) by (route)", "legendFormat": "{{route}}", "refId": "A" } ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Memoire residente backend (MB)",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [ { "expr": "process_resident_memory_bytes{app=\"ecommerce-backend\"} / 1024 / 1024", "legendFormat": "RSS MB", "refId": "A" } ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Latence HTTP p95 (s)",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(ecommerce_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95", "refId": "A" } ]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["ecommerce"],
+      "time": { "from": "now-15m", "to": "now" },
+      "timezone": "",
+      "title": "E-Commerce - Observabilite",
+      "uid": "ecommerce-obs",
+      "version": 1
+    }

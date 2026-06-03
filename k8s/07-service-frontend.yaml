@@ -1,0 +1,20 @@
+# Service NodePort qui expose le frontend a l'exterieur du cluster.
+# Acces via http://localhost:30080 (Docker Desktop / Minikube).
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: ecommerce
+  labels:
+    app: frontend
+    tier: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+      protocol: TCP

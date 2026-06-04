@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<style>
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{background:#0b1f3a;color:#e6edf3;font-family:'Segoe UI',Roboto,sans-serif;padding:26px}
+ h1{font-size:25px;color:#fff} h1 span{color:#326ce5}
+ .sub{color:#9fb3c8;margin:4px 0 18px;font-size:13.5px}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+ .card{background:#0f1830;border:1px solid #243049;border-radius:10px;overflow:hidden}
+ .card.full{grid-column:1 / -1}
+ .bar{background:#16223f;padding:7px 12px;display:flex;align-items:center;gap:7px;border-bottom:1px solid #243049}
+ .dot{width:11px;height:11px;border-radius:50%} .r{background:#ff5f56}.y{background:#ffbd2e}.g{background:#27c93f}
+ .cmd{color:#7fd1ff;font-family:Consolas,monospace;font-size:12.5px;margin-left:6px}
+ pre{padding:11px 14px;font-family:Consolas,monospace;font-size:12px;line-height:1.45;color:#cfe0f0;white-space:pre;overflow-x:auto}
+ .foot{margin-top:16px;color:#7fd1ff;font-size:13px}
+</style></head><body>
+ <h1><span>K8s</span> E-Commerce &mdash; Preuves de deploiement</h1>
+ <div class="sub">Cluster kind mono-noeud &bull; namespace <b>ecommerce</b> &bull; les 4 verifications imposees sont validees</div>
+ <div class="grid"><div class="card full"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="cmd">$ kubectl get nodes</span></div><pre>NAME                      STATUS   ROLES           AGE   VERSION
+ecommerce-control-plane   Ready    control-plane   8h    v1.32.2</pre></div><div class="card full"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="cmd">$ kubectl get all -n ecommerce</span></div><pre>NAME                             READY   STATUS    RESTARTS      AGE
+pod/backend-db-bcff44b5c-nnd7b   2/2     Running   0             15m
+pod/frontend-7d7b7cf69-bkhcp     1/1     Running   1 (17m ago)   8h
+pod/frontend-7d7b7cf69-vlcpv     1/1     Running   1 (17m ago)   8h
+
+NAME                       TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/backend-service    ClusterIP   10.96.60.216   &lt;none&gt;        3000/TCP       8h
+service/frontend-service   NodePort    10.96.64.223   &lt;none&gt;        80:30080/TCP   8h
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/backend-db   1/1     1            1           8h
+deployment.apps/frontend     2/2     2            2           8h
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/backend-db-bcff44b5c   1         1         1       8h
+replicaset.apps/frontend-7d7b7cf69     2         2         2       8h</pre></div><div class="card full"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="cmd">$ kubectl get pv,pvc -n ecommerce</span></div><pre>NAME                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                 STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+persistentvolume/mongo-pv   2Gi        RWO            Retain           Bound    ecommerce/mongo-pvc   manual         &lt;unset&gt;                          8h
+
+NAME                              STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/mongo-pvc   Bound    mongo-pv   2Gi        RWO            manual         &lt;unset&gt;                 8h</pre></div><div class="card"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="cmd">$ kubectl get secret,configmap -n ecommerce</span></div><pre>NAME                       TYPE     DATA   AGE
+secret/grafana-admin       Opaque   2      8h
+secret/mongo-credentials   Opaque   3      8h
+
+NAME                             DATA   AGE
+configmap/backend-config         4      8h
+configmap/grafana-dashboards     1      8h
+configmap/grafana-provisioning   2      8h
+configmap/kube-root-ca.crt       1      8h
+configmap/prometheus-config      1      8h</pre></div><div class="card"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="cmd">$ curl http://localhost:30080/api/health</span></div><pre>{&quot;status&quot;:&quot;ok&quot;,&quot;db&quot;:&quot;connected&quot;,&quot;timestamp&quot;:&quot;2026-06-04T00:01:46.065Z&quot;}</pre></div></div>
+ <div class="foot">Frontend http://localhost:30080 &bull; Backend ClusterIP backend-service:3000 &bull; Persistance PV/PVC (mongo-pv / mongo-pvc)</div>
+</body></html>

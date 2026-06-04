@@ -67,7 +67,7 @@ let N = 0;
   s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 6.35, w: PW, h: 1.15, fill: { color: NAVY2 } });
   s.addText([
     { text: "Equipe : ", options: { bold: true, color: TEAL } },
-    { text: "[Membre 1]  |  [Membre 2]  |  [Membre 3]", options: { color: "FFFFFF" } }
+    { text: "Abderahmane", options: { color: "FFFFFF" } }
   ], { x: 0.95, y: 6.55, w: 8.5, h: 0.4, fontFace: BF, fontSize: 14 });
   s.addText("Soutenance - Juin 2026", { x: 9.2, y: 6.55, w: 3.2, h: 0.4, fontFace: BF, fontSize: 13, color: "CADCFC", align: "right" });
 })();
@@ -398,29 +398,27 @@ let N = 0;
 (() => {
   N = 10; const s = pres.addSlide();
   header(s, "Validation", "Demonstration fonctionnelle");
-  const checks = [
-    ["A", "Frontend accessible", "curl localhost:30080/healthz  ->  ok", K8S],
-    ["B", "Frontend  ->  Backend", "GET /api/products  ->  liste JSON des produits", TEAL],
-    ["C", "Backend  ->  MongoDB", '/api/health  ->  {"db":"connected"}', K8S],
-    ["D", "Persistance des donnees", "commande conservee apres delete du Pod", TEAL]
-  ];
+  // Capture 1 : application (Frontend)
+  card(s, 0.5, 1.4, 6.16, 4.2);
+  s.addText("Application e-commerce (Frontend)", { x: 0.72, y: 1.5, w: 5.7, h: 0.32, fontFace: HF, fontSize: 13.5, color: K8S, bold: true });
+  s.addImage({ path: "docs/screenshots/01-app-frontend.png", x: 0.72, y: 1.9, w: 5.7, h: 3.2, sizing: { type: "contain", w: 5.7, h: 3.2 } });
+  s.addText("localhost:30080 - catalogue servi par le backend via MongoDB", { x: 0.72, y: 5.18, w: 5.7, h: 0.35, fontFace: BF, fontSize: 9.5, color: SLATE, italic: true });
+
+  // Capture 2 : etat du cluster Kubernetes
+  card(s, 6.84, 1.4, 5.99, 4.2);
+  s.addText("Etat du cluster Kubernetes", { x: 7.06, y: 1.5, w: 5.5, h: 0.32, fontFace: HF, fontSize: 13.5, color: K8S, bold: true });
+  s.addImage({ path: "docs/screenshots/02-kubernetes-proof.png", x: 7.06, y: 1.9, w: 5.55, h: 3.2, sizing: { type: "contain", w: 5.55, h: 3.2 } });
+  s.addText("kubectl get all,pv,pvc - pods Running, PV/PVC Bound, /api/health OK", { x: 7.06, y: 5.18, w: 5.55, h: 0.35, fontFace: BF, fontSize: 9.5, color: SLATE, italic: true });
+
+  // Bandeau compact des 4 verifications validees
+  const checks = [["A", "Frontend accessible"], ["B", "Front <-> Back"], ["C", "Back <-> MongoDB"], ["D", "Persistance OK"]];
   checks.forEach((c, i) => {
-    const x = 0.6 + (i % 2) * 6.15;
-    const y = 1.55 + Math.floor(i / 2) * 1.55;
-    card(s, x, y, 5.95, 1.35);
-    s.addShape(pres.shapes.OVAL, { x: x + 0.25, y: y + 0.32, w: 0.7, h: 0.7, fill: { color: c[3] } });
-    s.addText(c[0], { x: x + 0.25, y: y + 0.32, w: 0.7, h: 0.7, fontFace: HF, fontSize: 24, color: "FFFFFF", bold: true, align: "center", valign: "middle" });
-    s.addText(c[1], { x: x + 1.15, y: y + 0.22, w: 4.6, h: 0.45, fontFace: HF, fontSize: 15, color: INK, bold: true });
-    s.addText(c[2], { x: x + 1.15, y: y + 0.66, w: 4.65, h: 0.55, fontFace: MF, fontSize: 10.5, color: SLATE });
+    const x = 0.5 + i * 3.09;
+    s.addShape(pres.shapes.RECTANGLE, { x, y: 5.8, w: 2.96, h: 1.0, fill: { color: "ECFDF5" }, line: { color: "86EFAC", width: 1 } });
+    s.addShape(pres.shapes.OVAL, { x: x + 0.2, y: 6.07, w: 0.46, h: 0.46, fill: { color: GREEN } });
+    s.addText(c[0], { x: x + 0.2, y: 6.07, w: 0.46, h: 0.46, fontFace: HF, fontSize: 15, color: "FFFFFF", bold: true, align: "center", valign: "middle" });
+    s.addText(c[1], { x: x + 0.78, y: 5.95, w: 2.05, h: 0.7, fontFace: HF, fontSize: 12, color: INK, bold: true, valign: "middle" });
   });
-  // bandeau resultat
-  card(s, 0.6, 4.8, 12.1, 1.9, "ECFDF5");
-  s.addShape(pres.shapes.RECTANGLE, { x: 0.6, y: 4.8, w: 0.12, h: 1.9, fill: { color: GREEN } });
-  s.addText("Resultat", { x: 0.95, y: 4.95, w: 11.5, h: 0.4, fontFace: HF, fontSize: 16, color: GREEN, bold: true });
-  s.addText([
-    { text: "Les 4 verifications imposees passent : accessibilite, communication front<->back, back<->base, et persistance.", options: { breakLine: true, bullet: true, color: INK } },
-    { text: "Capture(s) d'ecran a inserer ici (kubectl get all, page e-commerce, page Prometheus Targets UP).", options: { bullet: true, color: AMBER } }
-  ], { x: 0.95, y: 5.4, w: 11.5, h: 1.2, fontFace: BF, fontSize: 13, paraSpaceAfter: 6 });
   footer(s, N);
 })();
 
@@ -499,7 +497,7 @@ let N = 0;
   s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 5.85, w: PW, h: 1.65, fill: { color: "081427" } });
   s.addText("Merci de votre attention", { x: 0.6, y: 6.05, w: 9, h: 0.7, fontFace: HF, fontSize: 26, color: "FFFFFF", bold: true });
   s.addText("Questions & demonstration live", { x: 0.6, y: 6.75, w: 9, h: 0.4, fontFace: BF, fontSize: 14, color: TEAL });
-  s.addText("github.com/<equipe>/k8s-ecommerce", { x: 8.5, y: 6.4, w: 4.2, h: 0.5, fontFace: MF, fontSize: 12, color: "CADCFC", align: "right" });
+  s.addText("github.com/Abder541/k8s-ecommerce", { x: 8.0, y: 6.4, w: 4.7, h: 0.5, fontFace: MF, fontSize: 12, color: "CADCFC", align: "right" });
 })();
 
 pres.writeFile({ fileName: "presentation/K8s-ECommerce-Presentation.pptx" }).then(f => console.log("OK:", f));

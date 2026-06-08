@@ -1,182 +1,244 @@
-# Aide-mémoire des commandes — Projet K8s E-Commerce
+# 📘 Commandes complètes — Docker & Kubernetes (référence pour l'oral)
 
-> Pour chaque commande : ce qu'elle fait, en mots simples. Le prof demande souvent « cette commande fait quoi ? ».
-
----
-
-## ⚠️ À savoir AVANT tout (le piège le plus courant)
-
-Toutes mes ressources sont dans un **namespace** (un espace de travail isolé) appelé `ecommerce`.
-→ Si tu oublies `-n ecommerce`, tu ne vois **rien** (kubectl regarde l'espace par défaut).
-
-**Astuce pour ne plus avoir à taper `-n ecommerce` à chaque fois :**
-```bash
-kubectl config set-context --current --namespace=ecommerce
-```
-> Définit `ecommerce` comme espace par défaut. Ensuite, plus besoin de `-n ecommerce`.
-
-**Les options qui reviennent partout :**
-| Option | Signification |
-|--------|---------------|
-| `-n ecommerce` | dans le **namespace** (espace) ecommerce |
-| `-f fichier` | depuis un **fichier** (file) |
-| `-l app=frontend` | filtre par **label** (étiquette) |
-| `-c backend` | un **conteneur** précis (si le pod en a plusieurs) |
-| `-o wide` | affichage **détaillé** (output) |
-| `-it` | mode **interactif** (pour entrer dans un conteneur) |
+> Pour chaque commande : à quoi elle sert + des exemples avec les **options** (quoi mettre derrière).
+> Mes ressources sont dans le **namespace `ecommerce`** → presque toujours `-n ecommerce`.
 
 ---
 
-## 1. DOCKER (fabriquer et lancer les images)
-
-| Commande | Ce qu'elle fait |
-|----------|-----------------|
-| `docker --version` | Affiche la version de Docker |
-| `docker build -t ecommerce-backend:1.0 ./backend` | **Construit** une image à partir du Dockerfile du dossier backend |
-| `docker images` | **Liste** toutes les images présentes |
-| `docker ps` | Liste les conteneurs **en cours d'exécution** |
-| `docker ps -a` | Liste **tous** les conteneurs (même arrêtés) |
-| `docker logs <conteneur>` | Affiche les **logs** d'un conteneur |
-| `docker start ecommerce-control-plane` | **Démarre** le conteneur du cluster (utile avant la démo) |
-| `docker stop <conteneur>` | **Arrête** un conteneur |
-
----
-
-## 2. KIND (créer/gérer le cluster Kubernetes)
-
-| Commande | Ce qu'elle fait |
-|----------|-----------------|
-| `kind create cluster --config kind-config.yaml` | **Crée** le cluster Kubernetes selon ma configuration |
-| `kind get clusters` | **Liste** les clusters existants |
-| `kind load docker-image ecommerce-backend:1.0 --name ecommerce` | **Injecte** mon image locale dans le cluster |
-| `kind delete cluster --name ecommerce` | **Supprime** le cluster |
-
----
-
-## 3. KUBECTL — VOIR l'état (les plus importantes !)
-
-| Commande | Ce qu'elle fait |
-|----------|-----------------|
-| `kubectl get nodes` | Liste les **nœuds** (machines) du cluster |
-| `kubectl get pods -n ecommerce` | Liste les **pods** (mes applications qui tournent) |
-| `kubectl get pods -n ecommerce -o wide` | Pareil, avec l'**IP** et le nœud de chaque pod |
-| `kubectl get all -n ecommerce` | Liste **toutes** les ressources (pods, services, deployments…) |
-| `kubectl get svc -n ecommerce` | Liste les **Services** (les adresses réseau) |
-| `kubectl get deployments -n ecommerce` | Liste les **Deployments** (les gestionnaires de pods) |
-| `kubectl get pv,pvc -n ecommerce` | Liste le **volume** persistant et sa réservation |
-| `kubectl get configmap,secret -n ecommerce` | Liste les **configurations** et les **secrets** |
-| `kubectl get namespaces` | Liste les **espaces de travail** |
-| `kubectl cluster-info` | Infos générales sur le **cluster** |
-
----
-
-## 4. KUBECTL — COMPRENDRE / DÉBOGUER (le prof adore ça)
-
-| Commande | Ce qu'elle fait |
-|----------|-----------------|
-| `kubectl describe pod <nom> -n ecommerce` | **Tous les détails** d'un pod + les événements (pourquoi il plante) |
-| `kubectl logs <pod> -n ecommerce` | Affiche les **logs** d'un pod |
-| `kubectl logs <pod> -n ecommerce -c backend` | Logs d'un **conteneur précis** (le pod backend-db en a 2) |
-| `kubectl logs -f <pod> -n ecommerce` | Logs **en direct** (suit en continu) |
-| `kubectl exec -it <pod> -n ecommerce -- sh` | **Entrer dans** un conteneur (ouvre un terminal dedans) |
-| `kubectl get events -n ecommerce` | Liste les **événements** récents du cluster |
-
-> Question piège fréquente : *« Comment tu sais pourquoi un pod ne démarre pas ? »*
-> Réponse : `kubectl describe pod <nom>` (voir les événements) **et** `kubectl logs <pod>` (voir l'erreur).
-
----
-
-## 5. KUBECTL — AGIR (déployer, supprimer, redémarrer)
-
-| Commande | Ce qu'elle fait |
-|----------|-----------------|
-| `kubectl apply -f k8s/` | **Déploie** toutes mes ressources (applique les fichiers YAML du dossier k8s) |
-| `kubectl apply -f k8s/04-deployment-backend-db.yaml` | Applique **un seul** fichier |
-| `kubectl delete pod <nom> -n ecommerce` | **Supprime** un pod (le Deployment le recrée tout seul) |
-| `kubectl delete pod -n ecommerce -l app=backend-db` | Supprime le(s) pod(s) qui ont l'étiquette `app=backend-db` |
-| `kubectl scale deployment frontend --replicas=3 -n ecommerce` | Change le **nombre de copies** (ici 3 frontends) |
-| `kubectl rollout restart deployment backend-db -n ecommerce` | **Redémarre** proprement un deployment |
-| `kubectl delete -f k8s/` | **Supprime** toutes les ressources déployées |
-| `kubectl delete namespace ecommerce` | Supprime **tout** l'espace ecommerce d'un coup |
-
----
-
-## 6. Les commandes de MA démo (à connaître par cœur)
+## 🟦 DOCKER
 
 ```bash
-# 1. Voir le cluster et tout ce qui tourne
-kubectl get nodes
-kubectl get all,pv,pvc -n ecommerce
+docker --version                  # version de Docker
+docker info                       # infos sur le moteur Docker
+docker images                     # lister toutes les images
+docker image ls                   # idem (autre écriture)
+docker image inspect <image>      # détails d'une image (couches, taille, arch)
 
-# 2. Voir que le backend parle à la base
-kubectl logs -n ecommerce -l app=backend-db -c backend
+# Construire une image
+docker build -t ecommerce-backend:1.0 ./backend     # -t = nom:tag, ./backend = dossier du Dockerfile
+docker build -t mon-image:1.0 -f Dockerfile.dev .   # -f = choisir un Dockerfile précis
+docker build --no-cache -t mon-image:1.0 .          # --no-cache = reconstruire sans cache
 
-# 3. LE test de persistance (le moment fort)
-kubectl delete pod -n ecommerce -l app=backend-db   # je supprime
-kubectl get pods -n ecommerce                        # il se recrée tout seul
-#   -> recharger http://localhost:30080 : les données sont toujours là
+# Lister / inspecter les conteneurs
+docker ps                         # conteneurs en cours d'exécution
+docker ps -a                      # TOUS les conteneurs (même arrêtés)
+docker ps -q                      # seulement les ID (utile pour scripts)
+docker inspect <conteneur>        # détails complets (réseau, montages...)
+docker stats                      # CPU/RAM en temps réel des conteneurs
 
-# 4. Entrer dans la base de données MongoDB (si demandé)
-kubectl exec -it -n ecommerce deploy/backend-db -c mongo -- mongosh -u admin -p Sup3rS3cret
+# Logs d'un conteneur
+docker logs <conteneur>           # afficher les logs
+docker logs -f <conteneur>        # -f = suivre en direct
+docker logs --tail 50 <conteneur> # les 50 dernières lignes
 
-# 5. Preuve que c'est un VRAI Kubernetes
-kubectl get pods -n kube-system   # etcd, apiserver, scheduler, coredns...
+# Entrer / exécuter dans un conteneur
+docker exec -it <conteneur> sh    # -it = interactif, ouvre un terminal
+docker exec <conteneur> ls /app   # exécuter une commande sans entrer
+
+# Cycle de vie
+docker start <conteneur>          # démarrer
+docker stop <conteneur>           # arrêter
+docker restart <conteneur>        # redémarrer
+docker rm <conteneur>             # supprimer un conteneur
+docker rmi <image>                # supprimer une image
+
+# Images depuis/vers un registre
+docker pull nginx:1.27-alpine     # télécharger une image
+docker pull --platform linux/amd64 grafana/grafana:11.2.0   # forcer l'architecture
 ```
 
 ---
 
-## 7. Déploiement complet (si on me demande de tout relancer)
+## 🟩 KIND (créer / gérer le cluster)
 
 ```bash
-cd "C:\Users\Maintenant pret\Cours (Red Hat, Docker) Loic"
-./deploy.ps1
-```
-> Une seule commande qui : crée le cluster, construit les images, les charge, et déploie tout.
-
-**Étape par étape (si on me demande le détail) :**
-```bash
-kind create cluster --config kind-config.yaml          # 1. créer le cluster
-docker build -t ecommerce-backend:1.0 ./backend        # 2. construire les images
-docker build -t ecommerce-frontend:1.0 ./frontend
-kind load docker-image ecommerce-backend:1.0 --name ecommerce   # 3. charger les images
-kind load docker-image ecommerce-frontend:1.0 --name ecommerce
-kubectl apply -f k8s/                                  # 4. déployer
-kubectl get pods -n ecommerce                          # 5. vérifier
+kind create cluster --config kind-config.yaml      # créer le cluster depuis ma config
+kind create cluster --name test                    # créer un cluster nommé "test"
+kind get clusters                                  # lister les clusters
+kind get nodes --name ecommerce                    # lister les nœuds du cluster
+kind load docker-image ecommerce-backend:1.0 --name ecommerce   # injecter une image locale
+kind delete cluster --name ecommerce               # supprimer le cluster
+kind export kubeconfig --name ecommerce            # reconfigurer kubectl sur ce cluster
 ```
 
 ---
 
-## 8. Les adresses (dans le navigateur)
+## 🟦 KUBECTL — Cluster & configuration
 
-| Adresse | Quoi |
-|---------|------|
-| http://localhost:30080 | L'application e-commerce |
-| http://localhost:30090/targets | Prometheus (cibles surveillées) |
-| http://localhost:30030 | Grafana (admin / admin123) |
-
-> Rappel : dans le navigateur, **uniquement `localhost:30080/30090/30030`**. Les noms comme `backend-service` sont **internes** au cluster et ne marchent pas dans le navigateur (c'est normal et voulu).
+```bash
+kubectl version                                 # version client + serveur
+kubectl cluster-info                            # adresses du cluster
+kubectl config get-contexts                     # lister les "contextes" (clusters connus)
+kubectl config current-context                  # le contexte actif
+kubectl config use-context kind-ecommerce       # changer de cluster
+kubectl config set-context --current --namespace=ecommerce   # namespace par défaut (plus besoin de -n)
+kubectl api-resources                           # liste TOUS les types de ressources
+kubectl explain pod                             # documentation d'un type de ressource
+kubectl explain pod.spec.containers             # doc d'un champ précis
+```
 
 ---
 
-## 9. Questions-pièges & réponses courtes
+## 🟦 KUBECTL — `get` (VOIR l'état) + ses options
 
-**« Comment vérifier que tout tourne ? »**
-> `kubectl get pods -n ecommerce` → tout doit être `Running`.
+```bash
+kubectl get nodes                               # les machines du cluster
+kubectl get nodes -o wide                       # + IP, OS, version
 
-**« Comment voir les logs d'une appli ? »**
-> `kubectl logs <pod> -n ecommerce` (et `-c backend` ou `-c mongo` pour choisir le conteneur).
+kubectl get pods -n ecommerce                   # les pods de mon appli
+kubectl get pods -n ecommerce -o wide           # + IP du pod et nœud
+kubectl get pods -A                             # pods de TOUS les namespaces (-A = all)
+kubectl get pods -n ecommerce --watch           # surveiller en direct (Ctrl+C pour arrêter)
+kubectl get pods -n ecommerce --show-labels     # afficher les étiquettes
+kubectl get pods -n ecommerce -l app=frontend   # filtrer par étiquette (-l = label)
+kubectl get pod <nom> -n ecommerce -o yaml      # le YAML complet du pod
+kubectl get pod <nom> -n ecommerce -o json      # en JSON
 
-**« Comment entrer dans un conteneur ? »**
-> `kubectl exec -it <pod> -n ecommerce -- sh`.
+kubectl get all -n ecommerce                    # TOUT (pods, services, deployments, replicasets)
+kubectl get svc -n ecommerce                    # les Services
+kubectl get endpoints -n ecommerce              # vers quels pods pointent les services
+kubectl get deployments -n ecommerce            # les Deployments
+kubectl get rs -n ecommerce                     # les ReplicaSets
+kubectl get pv                                  # les volumes (PV = ressource du cluster, sans namespace)
+kubectl get pvc -n ecommerce                    # les réservations de volume
+kubectl get configmap -n ecommerce              # les configurations
+kubectl get secret -n ecommerce                 # les secrets
+kubectl get namespaces                          # les espaces de travail
+kubectl get events -n ecommerce --sort-by=.lastTimestamp   # les événements récents
+```
 
-**« C'est quoi `-n` ? »**
-> Le namespace, un espace de travail isolé. Mes ressources sont dans `ecommerce`.
+---
 
-**« C'est quoi `apply -f` ? »**
-> Appliquer un fichier de configuration YAML pour créer/mettre à jour les ressources.
+## 🟦 KUBECTL — `describe` (DÉTAILS / pourquoi ça plante)
 
-**« Comment Kubernetes redémarre un pod tout seul ? »**
-> Le Deployment surveille le nombre de pods voulus ; si un pod disparaît, il en recrée un. Les sondes (probes) détectent aussi un pod en panne et le relancent.
+```bash
+kubectl describe pod <nom> -n ecommerce         # détails + événements d'un pod (LA commande de debug)
+kubectl describe node <nom>                     # détails d'un nœud
+kubectl describe svc backend-service -n ecommerce       # détails d'un service
+kubectl describe deployment frontend -n ecommerce       # détails d'un deployment
+kubectl describe pvc mongo-pvc -n ecommerce             # détails d'une réservation de volume
+```
 
-**« Différence build / load / apply ? »**
-> `docker build` fabrique l'image ; `kind load` la met dans le cluster ; `kubectl apply` déploie l'application qui utilise cette image.
+---
+
+## 🟦 KUBECTL — `logs` (voir ce que dit l'appli)
+
+```bash
+kubectl logs <pod> -n ecommerce                 # logs d'un pod
+kubectl logs <pod> -n ecommerce -c backend      # -c = un conteneur précis (le pod a backend + mongo)
+kubectl logs -f <pod> -n ecommerce              # -f = en direct
+kubectl logs --tail=50 <pod> -n ecommerce       # les 50 dernières lignes
+kubectl logs --since=10m <pod> -n ecommerce     # les 10 dernières minutes
+kubectl logs --previous <pod> -n ecommerce      # logs du conteneur AVANT son crash (très utile)
+kubectl logs -l app=backend-db -n ecommerce -c backend   # par étiquette, sans connaître le nom exact
+kubectl logs deploy/backend-db -n ecommerce -c backend   # via le deployment
+```
+
+---
+
+## 🟦 KUBECTL — `exec` (entrer dans un conteneur)
+
+```bash
+kubectl exec -it <pod> -n ecommerce -- sh                 # ouvrir un terminal dans le pod
+kubectl exec -it <pod> -n ecommerce -c mongo -- sh        # choisir le conteneur
+kubectl exec <pod> -n ecommerce -- ls /app                # lancer UNE commande
+# Entrer dans MongoDB :
+kubectl exec -it deploy/backend-db -n ecommerce -c mongo -- mongosh -u admin -p Sup3rS3cret
+```
+
+---
+
+## 🟦 KUBECTL — `port-forward` (accéder à un service depuis localhost)
+
+> Sert à joindre depuis ton PC un pod/service **interne** au cluster (qui n'a pas de NodePort).
+
+```bash
+kubectl port-forward -n ecommerce svc/backend-service 3000:3000
+#   -> ouvre localhost:3000 vers le backend (normalement interne)
+#   format : port_local:port_distant
+
+kubectl port-forward -n ecommerce pod/<nom-du-pod> 8080:80    # vers un pod précis
+kubectl port-forward -n ecommerce deploy/frontend 8080:80     # vers un deployment
+kubectl port-forward -n ecommerce svc/grafana-service 3001:3000   # Grafana sur localhost:3001
+```
+> Exemple à citer : *« Le backend est interne. Avec `port-forward`, je peux le tester depuis mon PC sans l'exposer publiquement. »*
+
+---
+
+## 🟦 KUBECTL — `apply` / `create` / `delete` (créer & supprimer)
+
+```bash
+kubectl apply -f k8s/                           # appliquer TOUS les fichiers d'un dossier
+kubectl apply -f k8s/04-deployment-backend-db.yaml   # un seul fichier
+kubectl delete -f k8s/                          # supprimer ce qui a été créé par ces fichiers
+kubectl delete pod <nom> -n ecommerce           # supprimer un pod (le Deployment le recrée)
+kubectl delete pod -l app=backend-db -n ecommerce    # supprimer par étiquette
+kubectl delete deployment monitoring -n ecommerce    # supprimer un deployment
+kubectl delete namespace ecommerce              # TOUT supprimer d'un coup
+kubectl create namespace test                   # créer un namespace
+```
+
+---
+
+## 🟦 KUBECTL — `scale` / `rollout` / `edit` (modifier en marche)
+
+```bash
+kubectl scale deployment frontend --replicas=3 -n ecommerce   # passer à 3 copies du frontend
+kubectl scale deployment frontend --replicas=1 -n ecommerce   # revenir à 1
+
+kubectl rollout status deployment frontend -n ecommerce       # état d'un déploiement
+kubectl rollout restart deployment backend-db -n ecommerce    # redémarrer proprement (sans delete)
+kubectl rollout history deployment frontend -n ecommerce      # historique des versions
+kubectl rollout undo deployment frontend -n ecommerce         # revenir à la version précédente
+
+kubectl edit deployment frontend -n ecommerce                 # éditer la config en direct
+kubectl set image deployment/frontend frontend=ecommerce-frontend:2.0 -n ecommerce   # changer l'image
+```
+
+---
+
+## 🟦 KUBECTL — Surveillance / avancé
+
+```bash
+kubectl top nodes                               # CPU/RAM des nœuds (si metrics-server installé)
+kubectl top pods -n ecommerce                   # CPU/RAM des pods
+kubectl get pod <nom> -n ecommerce -o jsonpath='{.status.podIP}'   # extraire un champ précis
+kubectl label pod <nom> env=demo -n ecommerce   # ajouter une étiquette
+kubectl cp ecommerce/<pod>:/chemin/fichier ./local   # copier un fichier depuis un pod
+```
+
+---
+
+## 🎯 « Le prof me demande… » → la commande
+
+| Question | Commande |
+|----------|----------|
+| Combien de pods tournent ? | `kubectl get pods -n ecommerce` |
+| Montre les nœuds du cluster | `kubectl get nodes` |
+| Affiche les logs du backend | `kubectl logs deploy/backend-db -n ecommerce -c backend` |
+| Pourquoi ce pod ne démarre pas ? | `kubectl describe pod <nom> -n ecommerce` puis `kubectl logs --previous <nom> -n ecommerce` |
+| Entre dans un conteneur | `kubectl exec -it <pod> -n ecommerce -- sh` |
+| Accède au backend depuis ton PC | `kubectl port-forward -n ecommerce svc/backend-service 3000:3000` |
+| Montre le YAML d'un pod | `kubectl get pod <nom> -n ecommerce -o yaml` |
+| Redémarre sans supprimer | `kubectl rollout restart deployment backend-db -n ecommerce` |
+| Mets 3 frontends | `kubectl scale deployment frontend --replicas=3 -n ecommerce` |
+| Voir l'utilisation CPU/RAM | `kubectl top pods -n ecommerce` |
+| Voir les événements | `kubectl get events -n ecommerce --sort-by=.lastTimestamp` |
+| Déploie l'application | `kubectl apply -f k8s/` |
+| Supprime tout | `kubectl delete namespace ecommerce` |
+| Vérifie le volume | `kubectl get pv,pvc -n ecommerce` |
+| Liste les services et leurs ports | `kubectl get svc -n ecommerce` |
+
+---
+
+## 🧩 Comprendre la STRUCTURE d'une commande kubectl
+
+```
+kubectl  <VERBE>   <TYPE>      <NOM>     -n <NAMESPACE>   <OPTIONS>
+kubectl  get       pods        backend   -n ecommerce     -o wide
+   |       |          |           |            |              |
+ outil   action   ressource    objet       espace        affichage
+```
+- **VERBE** : get, describe, logs, apply, delete, scale, exec, port-forward…
+- **TYPE** : pod, svc, deployment, pv, pvc, configmap, secret, node…
+- **OPTIONS courantes** : `-n` namespace · `-f` fichier · `-l` étiquette · `-c` conteneur · `-o` format · `-it` interactif · `-A` tous les namespaces

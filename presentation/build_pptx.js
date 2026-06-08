@@ -70,6 +70,7 @@ let N = 0;
     { text: "Abderahmane", options: { color: "FFFFFF" } }
   ], { x: 0.95, y: 6.55, w: 8.5, h: 0.4, fontFace: BF, fontSize: 14 });
   s.addText("Soutenance - Juin 2026", { x: 9.2, y: 6.55, w: 3.2, h: 0.4, fontFace: BF, fontSize: 13, color: "CADCFC", align: "right" });
+  s.addNotes(`Bonjour. Je vais vous presenter mon projet : mettre en ligne une boutique e-commerce sur Kubernetes.\n\nL'application a trois parties : l'interface du site que voit le client, le moteur qui gere la logique (les produits, les commandes), et la base de donnees qui garde les informations.\n\nTout est automatise : le systeme lance les parties, les surveille, et les repare tout seul si l'une tombe en panne.`);
 })();
 
 // ============================================================
@@ -78,6 +79,7 @@ let N = 0;
 (() => {
   N = 2; const s = pres.addSlide();
   header(s, "Contexte", "Objectif du projet");
+  s.addNotes(`Le but du projet : prendre une application complete et la faire tourner dans un environnement capable de la gerer automatiquement.\n\nUne contrainte etait imposee, c'est le tableau a droite : l'interface du site doit etre seule d'un cote (Pod 1), et le moteur avec la base de donnees ensemble de l'autre (Pod 2). J'ai respecte cette organisation.\n\nEn bas, ce sont les criteres de notation : le plus important, c'est que l'application fonctionne vraiment.`);
   // gauche : objectif
   card(s, 0.6, 1.5, 6.0, 2.4);
   s.addText("Mission", { x: 0.85, y: 1.65, w: 5.5, h: 0.4, fontFace: HF, fontSize: 16, color: K8S, bold: true });
@@ -116,6 +118,7 @@ let N = 0;
 (() => {
   N = 3; const s = pres.addSlide();
   header(s, "Conception", "Architecture de la solution");
+  s.addNotes(`Voici comment tout est relie. Je suis le chemin d'une visite :\n\nLe client arrive sur le site par une adresse (en haut a gauche). Le site ne calcule rien lui-meme : il transmet les demandes au moteur, qui est juste en dessous.\n\nLe moteur va chercher ou enregistrer les informations dans la base de donnees, qui est juste a cote de lui (ils sont dans le meme groupe, le Pod 2).\n\nEt point important : les donnees de la base sont ecrites sur un espace de stockage qui ne s'efface pas, meme si une partie redemarre. C'est la fleche vers le bas, le volume.`);
 
   // Cadre cluster
   s.addShape(pres.shapes.RECTANGLE, { x: 3.0, y: 1.45, w: 9.9, h: 5.25, fill: { color: "FFFFFF" }, line: { color: K8S, width: 1.5 } });
@@ -169,6 +172,7 @@ let N = 0;
 (() => {
   N = 4; const s = pres.addSlide();
   header(s, "Stack", "Choix techniques");
+  s.addNotes(`Voici les technologies que j'ai choisies.\n\nPour l'interface du site : React. Pour le moteur : Node.js. Pour la base de donnees : MongoDB. Ce sont trois technologies qui se marient bien et que je connais.\n\nPour faire tourner Kubernetes sur mon ordinateur, j'ai utilise un outil leger appele kind, qui cree un vrai environnement Kubernetes facile a relancer a l'identique.\n\nL'idee generale : une organisation simple, rapide a tester, et qui se reproduit en une commande.`);
   const cols = [
     ["FRONTEND", K8S, ["React 18 + Vite", "Servi par Nginx 1.27", "Build statique multi-stage", "Reverse-proxy /api"]],
     ["BACKEND", TEAL, ["Node.js 20 + Express", "Driver MongoDB officiel", "prom-client (/metrics)", "Retry de connexion DB"]],
@@ -198,6 +202,7 @@ let N = 0;
 (() => {
   N = 5; const s = pres.addSlide();
   header(s, "Conteneurisation", "Images & Dockerfiles");
+  s.addNotes(`Chaque partie de l'application est emballee dans un paquet autonome qui contient tout ce qu'il faut pour fonctionner. Ca garantit que ca marche pareil partout.\n\nA gauche, la recette pour le moteur. A droite, celle du site : je l'ai faite en deux temps. D'abord je fabrique le site, puis je ne garde que le resultat final dans un paquet tres leger.\n\nResultat, en bas : le paquet du site ne pese que 21 megaoctets au lieu de plusieurs centaines. C'est plus rapide a demarrer.`);
   // backend
   card(s, 0.6, 1.5, 6.0, 3.7);
   s.addText("Backend - Dockerfile", { x: 0.85, y: 1.62, w: 5.5, h: 0.35, fontFace: HF, fontSize: 15, color: K8S, bold: true });
@@ -241,6 +246,7 @@ let N = 0;
 (() => {
   N = 6; const s = pres.addSlide();
   header(s, "Orchestration", "Le cluster Kubernetes (kind)");
+  s.addNotes(`Ici je montre comment je cree l'environnement Kubernetes.\n\nUne seule commande suffit pour le creer (en haut a gauche). A droite, on voit que la machine est bien active et prete.\n\nComme mes paquets sont fabriques sur mon ordinateur, je les injecte directement dans l'environnement, sans avoir besoin de les publier sur internet. Tout reste en local, c'est rapide.\n\nSi on me demande : kind, c'est un vrai Kubernetes, juste installe de facon legere sur un PC.`);
   card(s, 0.6, 1.5, 6.0, 2.5);
   s.addText("Creation du cluster", { x: 0.85, y: 1.62, w: 5.5, h: 0.35, fontFace: HF, fontSize: 15, color: K8S, bold: true });
   s.addShape(pres.shapes.RECTANGLE, { x: 0.85, y: 2.05, w: 5.5, h: 1.05, fill: { color: NAVY } });
@@ -275,6 +281,7 @@ let N = 0;
 (() => {
   N = 7; const s = pres.addSlide();
   header(s, "Workloads", "Pods, Deployments & sondes");
+  s.addNotes(`Le tableau montre mes trois groupes d'application et comment ils sont geres.\n\nChaque partie est surveillee en permanence : si elle plante, le systeme la relance tout seul, sans intervention. C'est la colonne 'Sondes'.\n\nJ'ai aussi mis des limites pour qu'aucune partie ne consomme trop de memoire.\n\nEn bas a droite, j'explique un choix : pour la base de donnees, je l'arrete completement avant de la relancer lors d'une mise a jour. C'est pour eviter que deux versions touchent au meme espace de stockage en meme temps.`);
   s.addTable([
     [
       { text: "Deployment", options: { bold: true, color: "FFFFFF", fill: { color: NAVY } } },
@@ -312,6 +319,7 @@ let N = 0;
 (() => {
   N = 8; const s = pres.addSlide();
   header(s, "Reseau", "Services & communication");
+  s.addNotes(`Ici, comment les parties se parlent et comment on accede a l'application.\n\nLe tableau montre les adresses : le site a une porte d'entree ouverte vers l'exterieur (le port 30080), donc accessible depuis un navigateur. Le moteur, lui, n'est joignable que de l'interieur, pour la securite.\n\nEn bas, la chaine complete : du navigateur jusqu'a la base de donnees.\n\nDetail important : le site sert d'intermediaire et transmet les demandes au moteur. Comme ca, le navigateur ne parle qu'a une seule adresse, ce qui evite les blocages de securite des navigateurs.`);
   const rows = [
     ["frontend-service", "NodePort", "30080 -> 80", "Acces public au frontend"],
     ["backend-service", "ClusterIP", "3000", "Backend joignable en interne"],
@@ -353,6 +361,7 @@ let N = 0;
 (() => {
   N = 9; const s = pres.addSlide();
   header(s, "Donnees & securite", "Persistance (PV/PVC) & Secrets");
+  s.addNotes(`C'est une slide cle. Deux sujets : garder les donnees, et proteger les mots de passe.\n\nA gauche : la base de donnees ecrit ses informations sur un espace de stockage reserve qui survit, meme si la base redemarre.\n\nEn bas, le test que j'ai fait pour le prouver : je cree une commande, je supprime volontairement la partie base de donnees, le systeme la recree tout seul, et la commande est TOUJOURS la. C'est la preuve que rien n'est perdu.\n\nA droite : les mots de passe ne sont jamais ecrits en clair dans les fichiers, ils sont ranges a part de facon protegee.`);
   // PV/PVC flow
   card(s, 0.6, 1.5, 6.0, 3.0);
   s.addText("Persistance MongoDB", { x: 0.85, y: 1.62, w: 5.5, h: 0.35, fontFace: HF, fontSize: 15, color: K8S, bold: true });
@@ -398,6 +407,7 @@ let N = 0;
 (() => {
   N = 10; const s = pres.addSlide();
   header(s, "Validation", "Demonstration fonctionnelle");
+  s.addNotes(`Voici la preuve que tout fonctionne, avec deux captures reelles.\n\nA gauche : le site en ligne avec son catalogue de produits. Les produits viennent bien de la base de donnees, en passant par le moteur.\n\nA droite : l'etat du systeme. Toutes les parties sont actives, l'espace de stockage est bien relie, et le moteur repond correctement.\n\nEn bas, les quatre verifications demandees dans le sujet : le site est accessible, le site parle au moteur, le moteur parle a la base, et les donnees resistent au redemarrage. Les quatre sont validees.`);
   // Capture 1 : application (Frontend)
   card(s, 0.5, 1.4, 6.16, 4.2);
   s.addText("Application e-commerce (Frontend)", { x: 0.72, y: 1.5, w: 5.7, h: 0.32, fontFace: HF, fontSize: 13.5, color: K8S, bold: true });
@@ -428,6 +438,7 @@ let N = 0;
 (() => {
   N = 11; const s = pres.addSlide();
   header(s, "Pour aller plus loin", "Bonus realises");
+  s.addNotes(`J'ai voulu aller au-dela du minimum demande, avec trois choses en plus.\n\nUn : la securisation des mots de passe, ranges de facon protegee.\n\nDeux : j'ai prepare une version capable de tourner sur plusieurs machines, pas seulement une.\n\nTrois : j'ai ajoute un systeme de surveillance (Prometheus et Grafana) qui permet de suivre l'activite de l'application avec des graphiques. Les fichiers de configuration sont fournis et le moteur est prepare pour ca.`);
   const bonus = [
     ["Secrets", "Credentials MongoDB & Grafana chiffres en base64, injectes via secretKeyRef.", K8S],
     ["Observabilite (Pod 3)", "Prometheus scrape le backend instrumente (prom-client) ; dashboard Grafana pre-provisionne.", TEAL],
@@ -449,6 +460,7 @@ let N = 0;
 (() => {
   N = 12; const s = pres.addSlide();
   header(s, "Retour d'experience", "Difficultes rencontrees & solutions");
+  s.addNotes(`J'ai rencontre plusieurs obstacles, et pour chacun j'ai trouve une solution. Le tableau les resume.\n\nL'exemple le plus parlant : au demarrage, le moteur essayait de se connecter a la base de donnees avant qu'elle soit prete, donc ca plantait. Je l'ai regle en faisant reessayer le moteur plusieurs fois jusqu'a ce que la base reponde.\n\nL'idee a retenir : c'est normal d'avoir des problemes, l'important c'est de comprendre la cause et de la corriger. C'est ce qui m'a le plus appris.`);
   s.addTable([
     [
       { text: "Probleme", options: { bold: true, color: "FFFFFF", fill: { color: NAVY } } },
@@ -498,6 +510,7 @@ let N = 0;
   s.addText("Merci de votre attention", { x: 0.6, y: 6.05, w: 9, h: 0.7, fontFace: HF, fontSize: 26, color: "FFFFFF", bold: true });
   s.addText("Questions & demonstration live", { x: 0.6, y: 6.75, w: 9, h: 0.4, fontFace: BF, fontSize: 14, color: TEAL });
   s.addText("github.com/Abder541/k8s-ecommerce", { x: 8.0, y: 6.4, w: 4.7, h: 0.5, fontFace: MF, fontSize: 12, color: "CADCFC", align: "right" });
+  s.addNotes(`Pour conclure.\n\nA gauche, ce que j'ai livre : une application e-commerce complete, qui respecte l'architecture demandee, avec des donnees qui ne se perdent pas.\n\nA droite, les ameliorations possibles si on continuait : ajouter une connexion securisee HTTPS, un systeme qui ajoute automatiquement des ressources quand il y a beaucoup de visiteurs, et une mise a jour automatisee.\n\nJe termine par : merci de votre attention, je suis disponible pour repondre a vos questions.`);
 })();
 
 pres.writeFile({ fileName: "presentation/K8s-ECommerce-Presentation.pptx" }).then(f => console.log("OK:", f));
